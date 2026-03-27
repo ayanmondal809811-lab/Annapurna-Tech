@@ -1,41 +1,38 @@
-from flask import Flask, render_template, request, jsonify
+import os
 import requests
+from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
-# ==========================================
-# EKHANE TOMAR N8N WEBHOOK URL DITE HOBE
-# ==========================================
-N8N_WEBHOOK_URL = "https://your-n8n-instance.com/webhook/agri-ai"
+# ============================================================
+# REPLACE WITH YOUR ACTUAL N8N PRODUCTION WEBHOOK URL
+# ============================================================
+N8N_WEBHOOK_URL = "https://your-n8n-instance.com/webhook/agri-data"
 
 @app.route('/')
-def home():
-    # Eta templates/index.html load korbe
+def index():
     return render_template('index.html')
 
 @app.route('/api/analyze', methods=['POST'])
-def analyze_data():
+def analyze():
     try:
+        # Getting data from Frontend
         farmer_data = request.json
         
-        # Data pathachhi n8n Webhook e
-        # response = requests.post(N8N_WEBHOOK_URL, json=farmer_data)
-        # ai_result = response.json()
+        # Sending data to n8n Webhook
+        # Note: If n8n is not ready, this will throw an error. 
+        # You can mock the response for testing.
+        response = requests.post(N8N_WEBHOOK_URL, json=farmer_data, timeout=30)
         
-        # Test korar jonno nicher mock data (n8n ready hobar aage):
-        ai_result = {
-            "crop_recommendation": "High-Yield Wheat",
-            "risk_score": "Low (15%)",
-            "sowing_time": "Next week, post light rain",
-            "profit_prediction": "₹45,000 / Acre",
-            "emergency_advisory": "None at present. Weather is clear.",
-            "mandi_price": "₹2,200/Quintal (Kolkata Mandi)"
-        }
-        
-        return jsonify({"status": "success", "data": ai_result})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        if response.status_code == 200:
+            return jsonify(response.json())
+        else:
+            return jsonify({"error": "n8n connection failed"}), 500
 
-if __name__ == '__main__':
-    # Run the app
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    # Render uses dynamic ports
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
