@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Agriculture Intelligence System</title>
+    <style>
+        :root {
+            --primary: #2ecc71;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --danger: #e74c3c;
+            --warning: #f1c40f;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f7f6; color: var(--dark); display: flex; }
+        
+        /* Sidebar */
+        .sidebar { width: 250px; background-color: var(--dark); color: white; min-height: 100vh; padding: 20px; }
+        .sidebar h2 { color: var(--primary); margin-bottom: 30px; font-size: 1.5rem; }
+        .sidebar ul { list-style: none; }
+        .sidebar ul li { margin: 15px 0; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; cursor: pointer; transition: 0.3s; }
+        .sidebar ul li:hover { background: var(--primary); }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 20px; height: 100vh; overflow-y: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        /* Grid Layouts */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px; }
+        
+        /* Cards */
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .card h3 { margin-bottom: 15px; color: var(--dark); border-bottom: 2px solid var(--primary); padding-bottom: 5px; display: inline-block; }
+        
+        /* Form Elements */
+        input, select, button { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; }
+        button { background-color: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { background-color: #27ae60; }
+
+        /* Alerts */
+        .alert-box { background-color: #ffeaa7; border-left: 5px solid var(--warning); padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .storm-alert { background-color: #fab1a0; border-left: 5px solid var(--danger); }
+        
+        /* Results Highlight */
+        .result-value { font-size: 1.2rem; font-weight: bold; color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>Agri-Intelligence</h2>
+        <ul>
+            <li>Dashboard</li>
+            <li>Market Mandi Prices</li>
+            <li>Disease Detection</li>
+            <li>Community Seed Bank</li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>Farmer Guideline & AI Analysis</h1>
+            <div>Location: <strong>Kolkata, WB</strong> | Weather: <strong>32°C, Sunny</strong></div>
+        </div>
+
+        <div class="alert-box storm-alert" id="stormAlert" style="display: none;">
+            <strong>⚠️ Storm Alert:</strong> Heavy rainfall expected in 48 hours. Secure harvested crops.
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>Field & Crop Data Input</h3>
+                <form id="agriForm">
+                    <label>Soil NPK Level (e.g., 40-20-20)</label>
+                    <input type="text" id="npk" placeholder="Nitrogen-Phosphorus-Potassium">
+                    
+                    <label>Soil Moisture (%)</label>
+                    <input type="number" id="moisture" placeholder="e.g., 45">
+                    
+                    <label>Target Crop</label>
+                    <select id="crop">
+                        <option value="Rice">Rice</option>
+                        <option value="Wheat">Wheat</option>
+                        <option value="Jute">Jute</option>
+                    </select>
+
+                    <label>Upload Crop Image (For Disease Detection)</label>
+                    <input type="file" id="cropImage" accept="image/*">
+
+                    <button type="submit" id="analyzeBtn">Generate AI Strategy</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>AI Recommendation Engine</h3>
+                <p><strong>Recommended Crop:</strong> <span class="result-value" id="resCrop">--</span></p>
+                <p><strong>AI Risk Score:</strong> <span class="result-value" id="resRisk">--</span></p>
+                <p><strong>Smart Sowing Time:</strong> <span class="result-value" id="resSow">--</span></p>
+                <p><strong>Disease Detected:</strong> <span class="result-value" id="resDisease">--</span></p>
+                <p><strong>Est. Profit Prediction:</strong> <span class="result-value" id="resProfit">--</span></p>
+                <p><strong>Emergency Advisory:</strong> <span id="resAdv">--</span></p>
+            </div>
+        </div>
+
+        <div class="grid-3">
+            <div class="card">
+                <h3>Real-Time Mandi Price</h3>
+                <p class="result-value" id="resMandi">₹-- / Quintal</p>
+                <small>Updated via Market Intelligence</small>
+            </div>
+            <div class="card">
+                <h3>Best Selling Time</h3>
+                <p class="result-value">Next Month (Week 2)</p>
+                <small>Based on price prediction model</small>
+            </div>
+            <div class="card">
+                <h3>Farming Suggestion</h3>
+                <p><strong>Crop Rotation:</strong> Legumes</p>
+                <p><strong>Green Manure:</strong> Dhaincha</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('agriForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('analyzeBtn');
+            btn.innerText = "Analyzing via AI...";
+
+            // Collecting data to send to Python backend -> n8n
+            const payload = {
+                npk: document.getElementById('npk').value,
+                moisture: document.getElementById('moisture').value,
+                crop: document.getElementById('crop').value,
+                // Image processing logic can be added here (Base64 conversion)
+            };
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+
+                if(data.status === 'success') {
+                    // Updating UI with AI response
+                    document.getElementById('resCrop').innerText = data.data.crop_recommendation;
+                    document.getElementById('resRisk').innerText = data.data.risk_score;
+                    document.getElementById('resSow').innerText = data.data.sowing_time;
+                    document.getElementById('resProfit').innerText = data.data.profit_prediction;
+                    document.getElementById('resAdv').innerText = data.data.emergency_advisory;
+                    document.getElementById('resMandi').innerText = data.data.mandi_price;
+                    document.getElementById('resDisease').innerText = "Healthy (No Image)"; // Mock
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Failed to connect to AI server.");
+            } finally {
+                btn.innerText = "Generate AI Strategy";
+            }
+        });
+    </script>
+</body>
+</html>
