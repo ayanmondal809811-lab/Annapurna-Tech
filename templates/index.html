@@ -3,147 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Annapurna | AI Smart Agri System</title>
+    <title>AI Chat Assistant</title>
     <style>
-        :root {
-            --primary: #27ae60; --secondary: #2ecc71; --dark: #1b2631;
-            --light: #f4f7f6; --danger: #e74c3c; --accent: #f39c12;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-        body { background: var(--light); color: var(--dark); display: flex; flex-direction: column; min-height: 100vh; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f7f9fc; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        #chat-container { width: 400px; height: 550px; background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
         
-        header { background: var(--dark); color: white; padding: 1rem 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        header h1 { color: var(--secondary); font-size: 1.5rem; }
-
-        .container { display: grid; grid-template-columns: 350px 1fr; gap: 20px; padding: 20px; flex: 1; }
+        /* Header */
+        #chat-header { background: #007bff; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 1.1em; }
         
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .card h3 { margin-bottom: 15px; border-left: 4px solid var(--primary); padding-left: 10px; color: var(--primary); }
+        /* Chat Window */
+        #chat-window { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .message { padding: 10px 15px; border-radius: 8px; max-width: 80%; line-height: 1.4; }
+        .user-msg { background: #007bff; color: white; align-self: flex-end; }
+        .ai-msg { background: #f1f0f0; color: #333; align-self: flex-start; }
+        .typing { color: #888; font-style: italic; font-size: 0.9em; align-self: flex-start; }
 
-        input, select, button { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
-        button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        button:hover { background: #219150; transform: translateY(-2px); }
-
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .stat-box { background: #fff; padding: 15px; border-radius: 10px; border: 1px solid #eee; text-align: center; }
-        .stat-box span { display: block; font-size: 0.8rem; color: #7f8c8d; margin-bottom: 5px; }
-        .stat-box strong { font-size: 1.1rem; color: var(--dark); }
-
-        .alert-bar { background: #fdf2e9; border-left: 5px solid var(--accent); padding: 15px; margin-bottom: 20px; border-radius: 5px; display: none; }
-        .loading { display: none; text-align: center; padding: 20px; color: var(--primary); font-weight: bold; }
-
-        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
+        /* Input Area */
+        #input-area { display: flex; padding: 15px; background: #fff; border-top: 1px solid #eee; }
+        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; padding-left: 15px; }
+        button { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 20px; margin-left: 8px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        button:hover { background: #218838; }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>Project Annapurna</h1>
-    <div id="weather-info">Kolkata: 31°C | Humid</div>
-</header>
-
-<div class="container">
-    <aside>
-        <div class="card">
-            <h3>Field Data Input</h3>
-            <form id="agriForm">
-                <label>Soil N-P-K Levels</label>
-                <input type="text" id="npk" placeholder="e.g. 40-20-20" required>
-                
-                <label>Moisture Content (%)</label>
-                <input type="number" id="moisture" placeholder="e.g. 45" required>
-                
-                <label>Target Crop</label>
-                <select id="crop">
-                    <option value="Rice">Rice</option>
-                    <option value="Wheat">Wheat</option>
-                    <option value="Maize">Maize</option>
-                    <option value="Vegetables">Vegetables</option>
-                </select>
-
-                <label>Upload Leaf Image</label>
-                <input type="file" id="imageInput" accept="image/*">
-
-                <button type="submit" id="subBtn">Generate AI Insights</button>
-            </form>
-        </div>
-    </aside>
-
-    <main>
-        <div id="warning" class="alert-bar">
-            <strong>⚠️ Emergency Advisory:</strong> <span id="alertText">None</span>
-        </div>
-
-        <div id="loader" class="loading">Annapurna AI is analyzing your field data...</div>
-
-        <div class="card">
-            <h3>AI Strategy Results</h3>
-            <div class="dashboard-grid">
-                <div class="stat-box"><span>Recommended Crop</span><strong id="resCrop">--</strong></div>
-                <div class="stat-box"><span>AI Risk Score</span><strong id="resRisk">--</strong></div>
-                <div class="stat-box"><span>Best Sowing Time</span><strong id="resSow">--</strong></div>
-                <div class="stat-box"><span>Predicted Profit</span><strong id="resProfit">--</strong></div>
-            </div>
-        </div>
-
-        <div class="card">
-            <h3>Market & Health Intelligence</h3>
-            <div class="dashboard-grid">
-                <div class="stat-box"><span>Current Mandi Price</span><strong id="resMandi">--</strong></div>
-                <div class="stat-box"><span>Disease Status</span><strong id="resDisease">Healthy</strong></div>
-                <div class="stat-box"><span>Crop Rotation</span><strong id="resRotation">--</strong></div>
-                <div class="stat-box"><span>Best Market</span><strong id="resMarket">Nearby Mandi</strong></div>
-            </div>
-        </div>
-    </main>
+<div id="chat-container">
+    <div id="chat-header">AI Chat Assistant</div>
+    <div id="chat-window" id="chat-box">
+        <div class="message ai-msg">হ্যালো! আমি আপনাকে কীভাবে সাহায্য করতে পারি?</div>
+    </div>
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="আপনার বার্তাটি লিখুন..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()">Send</button>
+    </div>
 </div>
 
 <script>
-    document.getElementById('agriForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const loader = document.getElementById('loader');
-        const subBtn = document.getElementById('subBtn');
-        loader.style.display = 'block';
-        subBtn.disabled = true;
+    const sessionId = "{{ session_id }}"; // app.py থেকে আসছে
 
-        const formData = {
-            npk: document.getElementById('npk').value,
-            moisture: document.getElementById('moisture').value,
-            crop: document.getElementById('crop').value,
-            timestamp: new Date().toISOString()
-        };
+    async function sendMessage() {
+        const inputField = document.getElementById('user-input');
+        const chatWindow = document.getElementById('chat-window');
+        const message = inputField.value.trim();
+
+        if (!message) return;
+
+        // User message UI-তে যোগ করা
+        chatWindow.innerHTML += `<div class="message user-msg">${message}</div>`;
+        inputField.value = ''; // Input clear করা
+        chatWindow.scrollTop = chatWindow.scrollHeight; // নিচে স্ক্রল করা
+
+        // Typing status দেখানো
+        const typingId = 'typing-' + Date.now();
+        chatWindow.innerHTML += `<div class="typing" id="${typingId}">AI ভাবছে...</div>`;
+        chatWindow.scrollTop = chatWindow.scrollHeight;
 
         try {
-            const response = await fetch('/api/analyze', {
+            // আমাদের Python Backend-এ রিকোয়েস্ট পাঠানো
+            const response = await fetch('/chat', { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
+                body: JSON.stringify({ message: message, sessionId: sessionId })
             });
 
-            const result = await response.json();
-
-            // Mapping JSON result to UI
-            document.getElementById('resCrop').innerText = result.crop_recommendation || "--";
-            document.getElementById('resRisk').innerText = result.risk_score || "--";
-            document.getElementById('resSow').innerText = result.sowing_time || "--";
-            document.getElementById('resProfit').innerText = result.profit_prediction || "--";
-            document.getElementById('resMandi').innerText = result.mandi_price || "--";
-            document.getElementById('resRotation').innerText = result.rotation_suggestion || "--";
+            const data = await response.json();
             
-            if(result.emergency_advisory && result.emergency_advisory !== "None") {
-                document.getElementById('warning').style.display = 'block';
-                document.getElementById('alertText').innerText = result.emergency_advisory;
-            }
+            // Typing status মুছে ফেলা
+            const typingMsg = document.getElementById(typingId);
+            if(typingMsg) typingMsg.remove();
 
+            // AI-এর উত্তর UI-তে দেখানো
+            chatWindow.innerHTML += `<div class="message ai-msg">${data.output || "দুঃখিত, কোনো উত্তর পাওয়া যায়নি।"}</div>`;
+            chatWindow.scrollTop = chatWindow.scrollHeight;
         } catch (error) {
             console.error("Error:", error);
-            alert("Connection to Annapurna Server failed. Check n8n webhook.");
-        } finally {
-            loader.style.display = 'none';
-            subBtn.disabled = false;
+            const typingMsg = document.getElementById(typingId);
+            if(typingMsg) typingMsg.remove();
+            chatWindow.innerHTML += `<div class="message ai-msg">ভুল হয়েছে। দয়া করে পরে চেষ্টা করুন।</div>`;
         }
-    });
+    }
+
+    // এন্টার টিপলে মেসেজ সেন্ড করার জন্য
+    function handleKeyPress(event) {
+        if (event.key === "Enter") {
+            sendMessage();
+        }
+    }
 </script>
 
 </body>
