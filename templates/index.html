@@ -6,23 +6,17 @@
     <title>AI Chat Assistant</title>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f7f9fc; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        #chat-container { width: 400px; height: 550px; background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
-        
-        /* Header */
-        #chat-header { background: #007bff; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 1.1em; }
-        
-        /* Chat Window */
-        #chat-window { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .message { padding: 10px 15px; border-radius: 8px; max-width: 80%; line-height: 1.4; }
-        .user-msg { background: #007bff; color: white; align-self: flex-end; }
-        .ai-msg { background: #f1f0f0; color: #333; align-self: flex-start; }
-        .typing { color: #888; font-style: italic; font-size: 0.9em; align-self: flex-start; }
-
-        /* Input Area */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        #chat-container { width: 100%; max-width: 450px; height: 80vh; background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
+        #chat-header { background: #007bff; color: white; padding: 20px; text-align: center; font-weight: bold; font-size: 1.2em; }
+        #chat-window { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #fff; }
+        .message { padding: 12px 16px; border-radius: 15px; max-width: 85%; font-size: 0.95em; line-height: 1.4; }
+        .user-msg { background: #007bff; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .ai-msg { background: #e9ecef; color: #333; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .typing { color: #777; font-size: 0.85em; margin-left: 5px; }
         #input-area { display: flex; padding: 15px; background: #fff; border-top: 1px solid #eee; }
-        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; padding-left: 15px; }
-        button { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 20px; margin-left: 8px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 25px; outline: none; font-size: 1em; }
+        button { background: #28a745; color: white; border: none; padding: 0 20px; border-radius: 25px; margin-left: 10px; cursor: pointer; transition: 0.3s; }
         button:hover { background: #218838; }
     </style>
 </head>
@@ -30,7 +24,7 @@
 
 <div id="chat-container">
     <div id="chat-header">AI Chat Assistant</div>
-    <div id="chat-window" id="chat-box">
+    <div id="chat-window">
         <div class="message ai-msg">হ্যালো! আমি আপনাকে কীভাবে সাহায্য করতে পারি?</div>
     </div>
     <div id="input-area">
@@ -40,7 +34,7 @@
 </div>
 
 <script>
-    const sessionId = "{{ session_id }}"; // app.py থেকে আসছে
+    const sessionId = "{{ session_id }}";
 
     async function sendMessage() {
         const inputField = document.getElementById('user-input');
@@ -49,18 +43,17 @@
 
         if (!message) return;
 
-        // User message UI-তে যোগ করা
+        // User UI
         chatWindow.innerHTML += `<div class="message user-msg">${message}</div>`;
-        inputField.value = ''; // Input clear করা
-        chatWindow.scrollTop = chatWindow.scrollHeight; // নিচে স্ক্রল করা
+        inputField.value = '';
+        chatWindow.scrollTop = chatWindow.scrollHeight;
 
-        // Typing status দেখানো
+        // Show Typing
         const typingId = 'typing-' + Date.now();
-        chatWindow.innerHTML += `<div class="typing" id="${typingId}">AI ভাবছে...</div>`;
+        chatWindow.innerHTML += `<div class="typing" id="${typingId}">AI টাইপ করছে...</div>`;
         chatWindow.scrollTop = chatWindow.scrollHeight;
 
         try {
-            // আমাদের Python Backend-এ রিকোয়েস্ট পাঠানো
             const response = await fetch('/chat', { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -69,26 +62,19 @@
 
             const data = await response.json();
             
-            // Typing status মুছে ফেলা
-            const typingMsg = document.getElementById(typingId);
-            if(typingMsg) typingMsg.remove();
+            document.getElementById(typingId)?.remove();
 
-            // AI-এর উত্তর UI-তে দেখানো
-            chatWindow.innerHTML += `<div class="message ai-msg">${data.output || "দুঃখিত, কোনো উত্তর পাওয়া যায়নি।"}</div>`;
+            // AI UI
+            chatWindow.innerHTML += `<div class="message ai-msg">${data.output}</div>`;
             chatWindow.scrollTop = chatWindow.scrollHeight;
         } catch (error) {
-            console.error("Error:", error);
-            const typingMsg = document.getElementById(typingId);
-            if(typingMsg) typingMsg.remove();
-            chatWindow.innerHTML += `<div class="message ai-msg">ভুল হয়েছে। দয়া করে পরে চেষ্টা করুন।</div>`;
+            document.getElementById(typingId)?.remove();
+            chatWindow.innerHTML += `<div class="message ai-msg" style="color: red;">দুঃখিত, সংযোগ বিচ্ছিন্ন হয়েছে। আবার চেষ্টা করুন।</div>`;
         }
     }
 
-    // এন্টার টিপলে মেসেজ সেন্ড করার জন্য
     function handleKeyPress(event) {
-        if (event.key === "Enter") {
-            sendMessage();
-        }
+        if (event.key === "Enter") sendMessage();
     }
 </script>
 

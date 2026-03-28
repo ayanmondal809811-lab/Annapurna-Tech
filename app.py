@@ -1,16 +1,14 @@
-# app.py
 from flask import Flask, render_template, request, jsonify
 import requests
-import uuid # unique session id এর জন্য
+import uuid
 
 app = Flask(__name__)
 
-# *** জরুরি: এখানে আপনার n8n এর PRODUCTION Webhook URL টি বসান ***
+# n8n Webhook URL (নিশ্চিত করুন এটি Active আছে)
 N8N_WEBHOOK_URL = "https://ayanmondal10100.app.n8n.cloud/webhook/chat-bot"
 
 @app.route('/')
 def index():
-    # প্রতিটা নতুন ইউজার বা চ্যাটের জন্য একটি নতুন Session ID তৈরি করা
     session_id = str(uuid.uuid4())
     return render_template('index.html', session_id=session_id)
 
@@ -20,17 +18,29 @@ def chat():
     user_message = user_data.get("message")
     session_id = user_data.get("sessionId")
     
-    # n8n-এ ডেটা পাঠানো (message এবং sessionId)
     payload = {
         "message": user_message,
         "sessionId": session_id
     }
     
     try:
-        response = requests.post(N8N_WEBHOOK_URL, json=payload)
-        # n8n থেকে আসা রেজাল্ট
+        # n8n-এ রিকোয়েস্ট পাঠানো
+        response = requests.post(N8N_WEBHOOK_URL, json=payload, timeout=30)
+        
+        # যদি n8n কোনো ডাটা না পাঠায় বা এরর দেয়
+        if response.status_code != 200:
+            return jsonify({"output": "n8n সার্ভার রেসপন্স করছে না। অনুগ্রহ করে n8n workflow চেক করুন।"})
+
         data = response.json()
-        return jsonify(data)
+
+        # n8n ডাটা অনেক সময় লিস্ট হিসেবে পাঠায়, সেটি হ্যান্ডেল করা
+        if isinstance(data, list) and len(data) > 0:
+            ai_response = data[0].get("output") or data[0].get("response") or "কোনো উত্তর পাওয়া যায়নি।"
+        else:
+            ai_response = data.get("output") or data.get("response") or "কোনো উত্তর পাওয়া যায়নি।"
+            
+        return jsonify({"output": ai_response})
+
     except Exception as e:
         return jsonify({"output": f"Error: {str(e)}"})
 
