@@ -4,7 +4,7 @@ import requests
 app = Flask(__name__)
 
 # n8n Webhook URL (Render-e upload korar por ekhane n8n er URL ta bosiye dibe)
-N8N_WEBHOOK_URL = "YOUR_N8N_WEBHOOK_URL_HERE"
+N8N_WEBHOOK_URL = "https://ayanmondal10100.app.n8n.cloud/webhook/chat-bot"
 
 @app.route('/')
 def index():
