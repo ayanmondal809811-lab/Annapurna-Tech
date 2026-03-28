@@ -1,10 +1,10 @@
-import requests
 from flask import Flask, render_template, request, jsonify
+import requests
 
 app = Flask(__name__)
 
-# সঠিক Production URL (test ছাড়া)
-N8N_WEBHOOK_URL = "https://ayanmondal10100.app.n8n.cloud/webhook/chat-bot"
+# n8n Webhook URL (Render-e upload korar por ekhane n8n er URL ta bosiye dibe)
+N8N_WEBHOOK_URL = "YOUR_N8N_WEBHOOK_URL_HERE"
 
 @app.route('/')
 def index():
@@ -14,18 +14,18 @@ def index():
 def chat():
     user_message = request.json.get("message")
     
-    try:
-        # n8n-এ ডেটা পাঠানো হচ্ছে
-        response = requests.post(N8N_WEBHOOK_URL, json={"message": user_message})
-        
-        # যদি n8n থেকে খালি বা ভুল রেসপন্স আসে তা হ্যান্ডেল করা
-        if response.status_code == 200:
-            return jsonify(response.json())
-        else:
-            return jsonify({"output": "Error: n8n থেকে সঠিক উত্তর পাওয়া যায়নি।"})
-            
-    except Exception as e:
-        return jsonify({"output": f"Error: {str(e)}"})
+    if not user_message:
+        return jsonify({"error": "No message provided"}), 400
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=10000)
+    try:
+        # n8n-e data pathano hochhe
+        response = requests.post(N8N_WEBHOOK_URL, json={"message": user_message})
+        data = response.json()
+        
+        # n8n theke asha reply return kora hochhe
+        return jsonify({"reply": data.get("output", "Sorry, I couldn't understand that.")})
+    except Exception as e:
+        return jsonify({"reply": "Error connecting to AI server."}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
